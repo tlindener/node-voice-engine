@@ -56,6 +56,8 @@ Second you'll need one dependency for the node-speaker module
 Third I recommend installing the flac module to lower the cost of STT recognition
 > sudo apt-get install flac -y
 
+If you are running this on a raspberry pi you also have to change the \_snowboydetect library.
+You can get different prebuild binaries from here: https://github.com/Kitt-AI/snowboy
 
 Also you need to configure the alsa sound system accordingly:
 
