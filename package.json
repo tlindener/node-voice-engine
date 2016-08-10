@@ -13,6 +13,10 @@
     "devDependencies": {
         "chai": "^3.5.0"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tlindener/node-voice-engine.git"
+    },
     "author": "Tobias Lindener <tobias.lindener@thinghub.net> (http://www.thinghub.net)",
     "license": "Apache-2.0"
 }
