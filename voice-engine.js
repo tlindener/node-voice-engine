@@ -1,3 +1,8 @@
+// Copyright 2016 Tobias Lindener
+// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and limitations under the License.
 "use strict";
 var events = require('events');
 var cp = require('child_process');
@@ -41,7 +46,8 @@ class VoiceEngine extends events.EventEmitter {
         log.info("start keyword spotter");
         var self = this;
         this.kwsInProgress = true;
-        this.kwsProcess = cp.spawn('python', ['./speech/kws.py', this.kws.sensitivity, this.kws.model], {
+        var kwsPath = path.resolve(__dirname,'speech', 'kws.py')
+        this.kwsProcess = cp.spawn('python', [kwsPath, this.kws.sensitivity, this.kws.model], {
             detached: false
         })
 
@@ -114,7 +120,7 @@ class VoiceEngine extends events.EventEmitter {
         }
 
         var outfile = audioFilePath(params.voice, text);
-        console.log(outfile);
+        log.info("synthesizeText",outfile);
         fs.exists(outfile, function(alreadyCached) {
             if (alreadyCached) {
                 log.info('using cached audio: %s', outfile);
@@ -185,7 +191,7 @@ class VoiceEngine extends events.EventEmitter {
             // Displays events on the console.
             function onEvent(name, eventData) {
                 self.emit(name, eventData);
-                log.info(name, JSON.stringify(eventData, null, 2));
+                log.info(name, eventData);
             };
             recognizeStream.on('results', function(message) {
                 if (message.results[0].final) {

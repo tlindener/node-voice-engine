@@ -3,6 +3,46 @@ This is a component of the Smart Home Assistant project. The voice-engine is res
 
 It is in this form usable as a library only.
 
+## Usage
+```
+var VoiceEngine = require('voice-engine');
+
+var sttengine = {
+    url: "https://stream.watsonplatform.net/speech-to-text/api",
+    username: "",
+    password: ""
+}
+var ttsengine = {
+  url:"https://stream.watsonplatform.net/text-to-speech/api",
+  username:"",
+  password:""
+}
+var speech = {
+model: "hey_emma.pmdl",
+sensitivity: 0.4
+}
+var engine = new VoiceEngine(sttengine, ttsengine, speech);
+
+engine.startKeywordSpotting();
+engine.startSttRecognition();
+engine.synthesizeText(text);
+
+engine.on('keyword', function() {
+
+
+})
+engine.on('recognition-stopped', function() {
+
+})
+
+engine.on('recognition', function(message) {
+
+})
+engine.on('synthesized', function(message) {
+
+})
+```
+
 ## Requirements
 
 In order to run the voice engine successfully you will need to install some components.
