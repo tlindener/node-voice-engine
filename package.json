@@ -1,0 +1,11 @@
+{
+  "name": "voice-engine",
+  "version": "1.0.0",
+  "description": "This is a compact module which provides services for keyword spotting, speech recognition and text to speech.",
+  "main": "voice-engine.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tobias Lindener <tobias.lindener@thinghub.net> (http://www.thinghub.net)",
+  "license": "Apache-2.0"
+}
