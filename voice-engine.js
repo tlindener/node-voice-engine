@@ -47,7 +47,7 @@ class VoiceEngine extends events.EventEmitter {
         log.info("start keyword spotter");
         var self = this;
         this.kwsInProgress = true;
-        var kwsPath = path.resolve(__dirname,'speech', 'kws.py')
+        var kwsPath = path.resolve(__dirname, 'speech', 'kws.py')
         this.kwsProcess = cp.spawn('python', [kwsPath, this.kws.sensitivity, this.kws.model], {
             detached: false
         })
@@ -79,7 +79,24 @@ class VoiceEngine extends events.EventEmitter {
 
         }
     }
-    killOnlineRecongnitionProcess(cb) {
+    pauseOnlineRecongnitionProcess(cb) {
+
+        log.info("Stop piping data");
+        this.recognizeStream.end();
+        if (this.hasFlac) {
+
+            this.flacProcess.stdout.unpipe();
+            this.micProcess.stdout.unpipe();
+
+        } else {
+            this.micProcess.stdout.unpipe();
+        }
+
+        this.sttInProgress = true;
+        cb();
+    }
+
+    killRecognitionProcesses(cb) {
 
         try {
             this.micProcess.kill();
@@ -121,7 +138,7 @@ class VoiceEngine extends events.EventEmitter {
         }
 
         var outfile = audioFilePath(params.voice, text);
-        log.info("synthesizeText",outfile);
+        log.info("synthesizeText", outfile);
         fs.exists(outfile, function(alreadyCached) {
             if (alreadyCached) {
                 log.info('using cached audio: %s', outfile);
@@ -163,6 +180,12 @@ class VoiceEngine extends events.EventEmitter {
                 // I think cp.execSync throws any time the exit code isn't 0
             }
             self.firstRun = false;
+            self.recognizeStream = createOnlineRecognitionStream();
+            spawnMicrophoneProcess();
+            pipeData(self.recognizeStream);
+        } else {
+            self.recognizeStream = createOnlineRecognitionStream();
+            pipeData(self.recognizeStream);
         }
 
         function createOnlineRecognitionStream() {
@@ -195,17 +218,17 @@ class VoiceEngine extends events.EventEmitter {
                 log.info(name, eventData);
             };
             recognizeStream.on('results', function(message) {
-                  var request = message.results[0].alternatives[0].transcript;
+                var request = message.results[0].alternatives[0].transcript;
                 if (message.results[0].final && request.length > 1) {
                     log.info("Recognition is final");
-                    log.info("recognition-result",request);
+                    log.info("recognition-result", request);
                     var message = {
                         id: uuid.v4(),
                         request: request,
                         raw: message.results[0]
                     };
                     self.emit('recognition', message);
-                    self.killOnlineRecongnitionProcess(function(err) {
+                    self.pauseOnlineRecongnitionProcess(function(err) {
                         if (!err) {
                             self.emit('recognition-stopped');
                         }
@@ -215,7 +238,7 @@ class VoiceEngine extends events.EventEmitter {
             return recognizeStream;
         }
 
-        function spawnMicrophoneProcess(recognizeStream) {
+        function spawnMicrophoneProcess() {
             log.info("Spawn microophone process");
             self.micProcess = cp.spawn('arecord', ['--format=S16_LE', '--rate=44100', '--channels=1']);
             self.micProcess.on('close', function(code) {
@@ -227,14 +250,19 @@ class VoiceEngine extends events.EventEmitter {
             });
             if (self.hasFlac) {
                 self.flacProcess = cp.spawn('flac', ['-0', '-', '-']);
+            }
+        }
+
+        function pipeData(recognizeStream) {
+            log.info("Start piping data");
+            if (self.hasFlac) {
                 self.micProcess.stdout.pipe(self.flacProcess.stdin);
                 self.flacProcess.stdout.pipe(recognizeStream);
             } else {
                 self.micProcess.stdout.pipe(recognizeStream);
             }
         }
-        var recognizeStream = createOnlineRecognitionStream();
-        spawnMicrophoneProcess(recognizeStream);
+
 
     }
 
